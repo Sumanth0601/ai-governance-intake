@@ -1,0 +1,5 @@
+.env
+*.exe
+*.test
+/ai-governance-intake
+BUILD.prompt.md

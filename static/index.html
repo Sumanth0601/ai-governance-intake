@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Governance Intake</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #0f172a;
+      color: #fff;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    header span { font-size: 0.8rem; background: #1e40af; padding: 2px 8px; border-radius: 999px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    @media (max-width: 800px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 18px; color: #0f172a; }
+
+    label { display: block; font-size: 0.82rem; font-weight: 500; color: #374151; margin-bottom: 4px; margin-top: 14px; }
+    label:first-of-type { margin-top: 0; }
+
+    input, textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border-color 0.15s;
+      resize: vertical;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+    }
+
+    textarea { min-height: 80px; }
+
+    button[type="submit"] {
+      width: 100%;
+      margin-top: 20px;
+      padding: 11px;
+      background: #1d4ed8;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button[type="submit"]:hover:not(:disabled) { background: #1e40af; }
+    button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Results panel */
+    .results { min-height: 300px; }
+
+    .placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      color: #9ca3af;
+      text-align: center;
+      gap: 8px;
+    }
+
+    .placeholder svg { opacity: 0.4; }
+
+    .spinner {
+      border: 3px solid #e5e7eb;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      animation: spin 0.7s linear infinite;
+      margin: 80px auto;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Risk badge */
+    .badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-low      { background: #dcfce7; color: #166534; }
+    .badge-medium   { background: #fef9c3; color: #854d0e; }
+    .badge-high     { background: #ffedd5; color: #9a3412; }
+    .badge-critical { background: #fee2e2; color: #991b1b; }
+    .badge-duplicate{ background: #e0e7ff; color: #3730a3; }
+
+    .risk-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .risk-row h3 { font-size: 1rem; font-weight: 600; }
+
+    .summary {
+      background: #f8fafc;
+      border-left: 3px solid #94a3b8;
+      padding: 12px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.88rem;
+      color: #374151;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      background: #f1f5f9;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    /* Duplicate banner */
+    .dup-banner {
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
+    }
+
+    .dup-banner strong { display: block; color: #3730a3; margin-bottom: 6px; }
+    .dup-banner p { font-size: 0.87rem; color: #4338ca; }
+    .dup-banner a { color: #1d4ed8; }
+
+    /* Past proposals list */
+    .past-section { margin-top: 32px; }
+    .past-section h2 { font-size: 1rem; font-weight: 600; color: #0f172a; margin-bottom: 14px; }
+
+    .proposal-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #fff;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+
+    .proposal-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .proposal-row .pr-title { font-size: 0.9rem; font-weight: 500; }
+    .proposal-row .pr-date { font-size: 0.75rem; color: #9ca3af; margin-top: 2px; }
+
+    .error-msg {
+      background: #fee2e2;
+      color: #991b1b;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 0.87rem;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AI Governance Intake</h1>
+    <span>ISO 42001 · NIST AI RMF</span>
+  </header>
+
+  <div class="layout">
+    <!-- Left: Form -->
+    <div>
+      <div class="card">
+        <h2>New AI Project Proposal</h2>
+        <form id="proposal-form">
+          <label for="title">Project Title</label>
+          <input id="title" type="text" placeholder="e.g. Clinical Decision Support for Sepsis" required />
+
+          <label for="description">Description</label>
+          <textarea id="description" placeholder="What does this AI system do?" required></textarea>
+
+          <label for="data_sources">Data Sources</label>
+          <textarea id="data_sources" placeholder="What data will be used? Mention any PII." required></textarea>
+
+          <label for="intended_use">Intended Use</label>
+          <textarea id="intended_use" placeholder="Who uses the output and how?" required></textarea>
+
+          <button type="submit" id="submit-btn">Analyze Proposal</button>
+        </form>
+        <div id="form-error" class="error-msg" style="display:none;"></div>
+      </div>
+
+      <!-- Past proposals -->
+      <div class="past-section" id="past-section" style="display:none;">
+        <h2>Past Proposals</h2>
+        <div id="past-list"></div>
+      </div>
+    </div>
+
+    <!-- Right: Results -->
+    <div class="card results" id="results-panel">
+      <div class="placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 12h6M9 16h6M9 8h3M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/>
+        </svg>
+        <p>Submit a proposal to see<br/>the governance scorecard here.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('proposal-form');
+    const btn = document.getElementById('submit-btn');
+    const panel = document.getElementById('results-panel');
+    const formError = document.getElementById('form-error');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formError.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Analyzing…';
+      panel.innerHTML = '<div class="spinner"></div>';
+
+      const body = {
+        title: document.getElementById('title').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        data_sources: document.getElementById('data_sources').value.trim(),
+        intended_use: document.getElementById('intended_use').value.trim(),
+      };
+
+      try {
+        const res = await fetch('/proposals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          panel.innerHTML = `<div class="error-msg">${data.error || 'Something went wrong.'}</div>`;
+        } else if (data.status === 'duplicate') {
+          renderDuplicate(data);
+        } else {
+          renderScorecard(data);
+        }
+
+        loadPastProposals();
+      } catch (err) {
+        panel.innerHTML = `<div class="error-msg">Network error. Is the server running?</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Analyze Proposal';
+      }
+    });
+
+    function riskClass(r) {
+      const map = { low: 'badge-low', medium: 'badge-medium', high: 'badge-high', critical: 'badge-critical' };
+      return map[r] || 'badge-medium';
+    }
+
+    function renderScorecard(data) {
+      const sc = data.scorecard;
+      const findingsRows = (sc.findings || []).map(f => `
+        <tr>
+          <td>${f.control}</td>
+          <td><span class="badge ${riskClass(f.severity)}">${f.severity}</span></td>
+          <td>${f.issue}</td>
+          <td>${f.recommendation}</td>
+        </tr>
+      `).join('');
+
+      panel.innerHTML = `
+        <div class="risk-row">
+          <h3>${data.title}</h3>
+          <span class="badge ${riskClass(data.risk_score)}">${data.risk_score} risk</span>
+        </div>
+        <div class="summary">${sc.summary}</div>
+        ${findingsRows ? `
+          <table>
+            <thead>
+              <tr>
+                <th>Control</th>
+                <th>Severity</th>
+                <th>Issue</th>
+                <th>Recommendation</th>
+              </tr>
+            </thead>
+            <tbody>${findingsRows}</tbody>
+          </table>` : '<p style="color:#6b7280;font-size:.87rem">No findings.</p>'}
+      `;
+    }
+
+    function renderDuplicate(data) {
+      const sim = data.similarity ? (data.similarity * 100).toFixed(1) : '—';
+      panel.innerHTML = `
+        <div class="dup-banner">
+          <strong>Duplicate Detected (${sim}% match)</strong>
+          <p>${data.message}</p>
+          <p style="margin-top:8px">
+            Existing proposal: <a href="/proposals/${data.duplicate_of}">${data.duplicate_of}</a>
+          </p>
+        </div>
+        <div class="risk-row">
+          <h3>${data.title}</h3>
+          <span class="badge badge-duplicate">duplicate</span>
+        </div>
+      `;
+    }
+
+    async function loadPastProposals() {
+      try {
+        const res = await fetch('/proposals');
+        const list = await res.json();
+        const section = document.getElementById('past-section');
+        const container = document.getElementById('past-list');
+
+        if (!list.length) { section.style.display = 'none'; return; }
+
+        section.style.display = 'block';
+        container.innerHTML = list.map(p => `
+          <div class="proposal-row" onclick="loadProposal('${p.id}')">
+            <div>
+              <div class="pr-title">${p.title}</div>
+              <div class="pr-date">${new Date(p.created_at).toLocaleString()}</div>
+            </div>
+            <span class="badge ${riskClass(p.risk_score)}">${p.risk_score}</span>
+          </div>
+        `).join('');
+      } catch (_) {}
+    }
+
+    async function loadProposal(id) {
+      panel.innerHTML = '<div class="spinner"></div>';
+      try {
+        const res = await fetch(`/proposals/${id}`);
+        const data = await res.json();
+        if (data.duplicate_of) {
+          renderDuplicate({ ...data, status: 'duplicate', similarity: null });
+        } else {
+          renderScorecard(data);
+        }
+      } catch (_) {
+        panel.innerHTML = '<div class="error-msg">Failed to load proposal.</div>';
+      }
+    }
+
+    // Load past proposals on page load
+    loadPastProposals();
+  </script>
+</body>
+</html>
